@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+</head>
+
+<body>
+    <style>
+        li {
+            font-size: 2rem;
+            cursor: pointer;
+            user-select: none
+        }
+
+        .done {
+            color: red;
+        }
+    </style>
+    <div id="app">
+        <h1>Lista</h1>
+        <ul>
+            <li v-for="item in list" @click="toggleItem(item)" :class="{'done':item.done}">{{item.item}}</li>
+        </ul>
+        <h3>{{new Date(lastUpdated).toLocaleString()}}</h3>
+    </div>
+    <script type="module">
+        import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
+
+        createApp({
+            data() {
+                return {
+                    list: [],
+                    lastUpdated: 0,
+                    api: "list.php"
+                };
+            }, mounted() {
+                fetch(this.api).then(
+                    response => response.json()
+                ).then(
+                    data => {
+                        this.list = data.items;
+                        this.lastUpdated = new Date(data.lastUpdated);
+                    });
+            }, methods: {
+                toggleItem(item) {
+                    item.done = !item.done;
+                    this.updateRemoteList();
+                },
+                updateRemoteList() {
+                    let data = new FormData();
+                    data.append("items", JSON.stringify(this.list));
+                    fetch(this.api, {
+                        method: "POST",
+                        // headers: {
+                        //     'Accept': 'application/json',
+                        //     'Content-Type': 'multipart/form-data',
+                        // },
+                        body: data,
+                    }).then(
+                        response => response.json()
+                    ).then(
+                        data => {
+                            this.list = data.items;
+                            this.lastUpdated = new Date(data.lastUpdated);
+                        }
+                    );
+                }
+            }
+        }).mount('#app')
+    </script>
+</body>
+
+</html>
